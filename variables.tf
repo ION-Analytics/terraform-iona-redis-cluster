@@ -59,3 +59,22 @@ variable "num_node_groups" {
     type = number
     default = 2
 }
+
+variable "replicas_per_node_group" {
+    description = "Number of replica nodes in each node group. Changing this number will trigger a resizing operation before other settings modifications. Defaults to 0"
+    type = number
+    default = 0
+}
+
+variable "engine_version" {
+    description = "Version number of the cache engine to be used for the cache clusters in this replication group. If the version is 7 or higher, the major and minor version should be set, e.g., 7.2 Defaults to 7.1"
+    type = string
+    default = "7.1"
+}
+
+variable "cluster_mode" {
+    description = "Specifies whether cluster mode is enabled or disabled. Defaults to enabled."
+    type = string
+    default = "enabled"
+}
+
