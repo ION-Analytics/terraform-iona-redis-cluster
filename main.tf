@@ -21,6 +21,8 @@ data "aws_region" "current" {
 resource "aws_elasticache_replication_group" "cluster" {
     provider = aws.location
     replication_group_id       = "${var.cluster_id}-${local.region_datacenter}"
+    engine_version             = var.engine_version
+    cluster_mode               = var.cluster_mode
     description                = var.description
     node_type                  = var.node_type
     port                       = var.cluster_port
@@ -28,7 +30,7 @@ resource "aws_elasticache_replication_group" "cluster" {
     automatic_failover_enabled = true
     user_group_ids          = [aws_elasticache_user_group.runtime.user_group_id]
     num_node_groups         = var.num_node_groups
-    replicas_per_node_group = 0
+    replicas_per_node_group = var.replicas_per_node_group
     log_delivery_configuration {
         destination = aws_cloudwatch_log_group.engine-logs.name
         destination_type = "cloudwatch-logs"
