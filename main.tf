@@ -12,6 +12,11 @@ locals {
     region_datacenter = "${data.aws_region.current.name}-${var.cluster_datacenter}"
     pgname = var.parameter_group_name == "" ? "${var.cluster_id}-${local.region_datacenter}" : var.parameter_group_name
     pgdescription = var.parameter_group_description == "" ? "Managed by Terraform" : var.parameter_group_description
+    account_id    = data.aws_caller_identity.current.account_id
+}
+
+data "aws_caller_identity" "current" {
+  provider = aws.location
 }
 
 data "aws_region" "current" {
@@ -108,4 +113,28 @@ resource "aws_cloudwatch_log_group" "engine-logs" {
     name = "/aws/elasticache/fb-runtime-${local.region_datacenter}"
     log_group_class = "STANDARD"
     retention_in_days = "90"
+}
+
+resource "aws_cloudwatch_log_resource_policy" "elasticache_log_delivery_policy" {
+  provider        = aws.location
+  policy_document = data.aws_iam_policy_document.elasticache_log_delivery_policy.json
+  policy_name     = "fb-elasticache-log-delivery-policy-${local.region_datacenter}"
+}
+
+data "aws_iam_policy_document" "elasticache_log_delivery_policy" {
+  statement {
+    actions = [
+      "logs:PutLogEvents",
+      "logs:CreateLogStream"
+    ]
+
+    resources = [
+      "arn:aws:logs:${data.aws_region.current.region}:${local.account_id}:log-group:/aws/elasticache/fb-runtime-${local.region_datacenter}:log-stream:*"
+    ]
+
+    principals {
+      identifiers = ["delivery.logs.amazonaws.com"]
+      type        = "Service"
+    }
+  }
 }
