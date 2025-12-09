@@ -36,11 +36,15 @@ resource "aws_elasticache_replication_group" "cluster" {
     user_group_ids          = [aws_elasticache_user_group.runtime.user_group_id]
     num_node_groups         = var.num_node_groups
     replicas_per_node_group = var.replicas_per_node_group
-    log_delivery_configuration {
-        destination = aws_cloudwatch_log_group.engine-logs.name
-        destination_type = "cloudwatch-logs"
-        log_format = "json"
-        log_type = "engine-log"
+    dynamic "log_delivery_configuration" {
+        for_each = var.log_delivery_configuration
+
+        content {
+        destination      = lookup(log_delivery_configuration.value, "destination", null)
+        destination_type = lookup(log_delivery_configuration.value, "destination_type", null)
+        log_format       = lookup(log_delivery_configuration.value, "log_format", null)
+        log_type         = lookup(log_delivery_configuration.value, "log_type", null)
+        }
     }
     transit_encryption_enabled = true
     security_group_ids = var.security_group_ids
@@ -49,7 +53,7 @@ resource "aws_elasticache_replication_group" "cluster" {
 
 resource "aws_elasticache_user" "default" {
     provider = aws.location
-    user_id = "fb-default-user-${local.region_datacenter}"
+    user_id = var.elasticache_default_user_id
     user_name = "default"
     access_string = "off -@all"
     engine = "redis"
@@ -60,8 +64,8 @@ resource "aws_elasticache_user" "default" {
 
 resource "aws_elasticache_user" "runtime" {
     provider = aws.location
-    user_id = "fb-runtime-user-${local.region_datacenter}"
-    user_name = "fb-runtime-user-${local.region_datacenter}"
+    user_id = var.elasticache_runtime_user_id
+    user_name = var.elasticache_runtime_user_id
     access_string = "on ~* &* +@all"
     engine = "redis"
     authentication_mode {
@@ -71,7 +75,7 @@ resource "aws_elasticache_user" "runtime" {
 
 resource "aws_elasticache_user_group" "runtime" {
     provider = aws.location
-    user_group_id = "fb-runtime-ug-${local.region_datacenter}"
+    user_group_id = var.elasticache_user_group_id
     engine  = "redis"
     user_ids = [
         aws_elasticache_user.default.user_id,
@@ -108,17 +112,21 @@ resource "aws_elasticache_subnet_group" "subnet_group" {
     subnet_ids = var.subnets
 }
 
-resource "aws_cloudwatch_log_group" "engine-logs" {
+
+
+resource "aws_cloudwatch_log_group" "logs" {
+    count = length(var.log_delivery_configuration)
     provider = aws.location
-    name = "/aws/elasticache/fb-runtime-${local.region_datacenter}"
+    name = lookup(var.log_delivery_configuration[count.index], "destination")
     log_group_class = "STANDARD"
     retention_in_days = "90"
 }
 
 resource "aws_cloudwatch_log_resource_policy" "elasticache_log_delivery_policy" {
-  provider        = aws.location
-  policy_document = data.aws_iam_policy_document.elasticache_log_delivery_policy.json
-  policy_name     = "fb-elasticache-log-delivery-policy-${local.region_datacenter}"
+    count = length(var.log_delivery_configuration)
+    provider        = aws.location
+    policy_document = data.aws_iam_policy_document.elasticache_log_delivery_policy.json
+    policy_name     = lookup(var.log_delivery_configuration[count.index], "destination")
 }
 
 data "aws_iam_policy_document" "elasticache_log_delivery_policy" {

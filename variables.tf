@@ -15,6 +15,22 @@ variable "parameter_group_name" {
     default     = ""
 }
 
+variable "elasticache_default_user_id" {
+    description = "REQUIRED: ID of default elasticache user"
+    type = string
+}
+
+variable "elasticache_runtime_user_id" {
+    description = "REQUIRED: ID of runtime elasticache user"
+    type = string
+}
+
+variable "elasticache_user_group_id" {
+    description = "REQUIRED: ID of elasticache user group"
+    type = string
+}
+
+
 variable "parameter_group_description" {
     description = "Optional description for the parameter group. If omitted will use 'Managed by Terraform'"
     type        = string
@@ -78,3 +94,27 @@ variable "cluster_mode" {
     default = "enabled"
 }
 
+variable "log_delivery_configuration" {
+  type        = list(map(any))
+  default     = []
+  description = "The log_delivery_configuration block allows the streaming of Redis SLOWLOG or Redis Engine Log to CloudWatch Logs or Kinesis Data Firehose. Max of 2 blocks."
+}
+
+# sample value
+
+# locals {
+#     log_delivery_configuration = [
+#         {
+#             "destination": "/aws/elasticache/fb-runtime-${local.region_datacenter}-engine-log"
+#             "destination_type": "cloudwatch-logs"
+#             "log_format": "json"
+#             "log_type" : "engine-log"
+#         },
+#         {
+#             "destination": "/aws/elasticache/fb-runtime-${local.region_datacenter}-slow-log"
+#             "destination_type": "cloudwatch-logs"
+#             "log_format": "json"
+#             "log_type" : "slow-log"
+#         }
+#     ]
+# }
