@@ -118,3 +118,26 @@ variable "log_delivery_configuration" {
 #         }
 #     ]
 # }
+
+variable "parameter" {
+    description = "Redis Parameter group values. Defaults should be sane."
+    type = list(object({
+        name  = string
+        value = string
+    }))
+    default = [
+        {
+            name  = "activedefrag"
+            value = "yes"
+        },
+        {
+            name  = "cluster-enabled"
+            value = "yes"
+        },
+        {
+
+            name  = "notify-keyspace-events"
+            value = "Egx"
+        }
+    ]
+}

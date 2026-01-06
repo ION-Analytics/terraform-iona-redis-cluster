@@ -31,7 +31,7 @@ resource "aws_elasticache_replication_group" "cluster" {
     description                = var.description
     node_type                  = var.node_type
     port                       = var.cluster_port
-    parameter_group_name       = aws_elasticache_parameter_group.cluster_pg.name
+    parameter_group_name       = local.pgname
     automatic_failover_enabled = true
     user_group_ids          = [aws_elasticache_user_group.runtime.user_group_id]
     num_node_groups         = var.num_node_groups
@@ -90,19 +90,12 @@ resource "aws_elasticache_parameter_group" "cluster_pg" {
     name   = local.pgname
     family = "redis7"
 
-    parameter {
-        name  = "activedefrag"
-        value = "yes"
-    }
-
-    parameter {
-        name  = "cluster-enabled"
-        value = "yes"
-    }
-
-    parameter {
-        name  = "notify-keyspace-events"
-        value = "Egx"
+    dynamic "parameter" {
+        for_each = var.parameter
+        content {
+        name  = parameter.value.name
+        value = tostring(parameter.value.value)
+        }
     }
 }
 
@@ -137,7 +130,7 @@ data "aws_iam_policy_document" "elasticache_log_delivery_policy" {
     ]
 
     resources = [
-      "arn:aws:logs:${data.aws_region.current.region}:${local.account_id}:log-group:/aws/elasticache/fb-runtime-${local.region_datacenter}:log-stream:*"
+      "arn:aws:logs:${data.aws_region.current.region}:${local.account_id}:log-group:${aws_cloudwatch_log_group.logs.name}:log-stream:*"
     ]
 
     principals {
