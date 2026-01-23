@@ -58,7 +58,7 @@ variable "cluster_datacenter" {
     validation {
         # Check if the user's input exists in the list of discovered cluster names
         condition     = contains(data.aws_ecs_clusters.available.cluster_names, var.cluster_datacenter)
-        error_message = "The cluster name '${var.cluster_datacenter}' does not exist. Available clusters are: ${join(", ", data.aws_ecs_clusters.available.cluster_names)}"
+        error_message = "The cluster name '${var.cluster_datacenter}' does not exist in the current region."
     }
 
 }
