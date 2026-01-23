@@ -33,7 +33,9 @@ resource "aws_elasticache_replication_group" "cluster" {
     port                       = var.cluster_port
     parameter_group_name       = local.pgname
     automatic_failover_enabled = true
-    user_group_ids          = [aws_elasticache_user_group.runtime.user_group_id]
+    user_group_ids          = [
+        aws_elasticache_user_group.runtime.user_group_id
+    ]
     num_node_groups         = var.num_node_groups
     replicas_per_node_group = var.replicas_per_node_group
     dynamic "log_delivery_configuration" {
@@ -60,6 +62,11 @@ resource "aws_elasticache_user" "default" {
     authentication_mode {
         type = "no-password-required"
     }
+    timeouts {
+        create = "10m"
+        update = "10m"
+        delete = "10m"
+  }
 }
 
 resource "aws_elasticache_user" "runtime" {
