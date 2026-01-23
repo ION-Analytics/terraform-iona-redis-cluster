@@ -150,7 +150,7 @@ resource "aws_cloudwatch_log_group" "logs" {
   provider          = aws.location
   name              = lookup(var.log_delivery_configuration[count.index], "destination")
   log_group_class   = "STANDARD"
-  retention_in_days = "90"
+  retention_in_days = 10
 }
 
 
