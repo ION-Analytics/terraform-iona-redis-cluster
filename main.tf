@@ -78,6 +78,11 @@ resource "aws_elasticache_user" "runtime" {
     authentication_mode {
         type = "iam"
     }
+    timeouts {
+        create = "10m"
+        update = "10m"
+        delete = "10m"
+  }
 }
 
 resource "aws_elasticache_user_group" "runtime" {
