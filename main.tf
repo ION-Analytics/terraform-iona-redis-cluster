@@ -16,13 +16,15 @@ locals {
   final_parameter_group_description = var.parameter_group_description == "" ? "Managed by Terraform" : "Managed by Terraform ${var.parameter_group_description}"
   account_id                        = data.aws_caller_identity.current.account_id
 
-  ecs_clusters = data.aws_ecs_clusters.all_clusters.cluster_names
+  ecs_cluster_arns = data.aws_ecs_clusters.all_clusters.cluster_arns
+  ecs_clusters     = [for arn in local.ecs_cluster_arns : split("/", arn)[length(split("/", arn)) - 1]]
+
   is_valid_datacenter = contains(local.ecs_clusters, var.cluster_id)
 }
 
 # Output the list of available ECS clusters
 output "available_ecs_clusters" {
-  value = local.ecs_clusters
+  value       = local.ecs_clusters
   description = "List of ECS clusters available in the region"
 }
 
