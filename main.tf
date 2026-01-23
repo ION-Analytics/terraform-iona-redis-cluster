@@ -8,15 +8,14 @@ terraform {
 }
 
 
-
 locals {
   component                         = "internal"
   region_datacenter                 = "${data.aws_region.current.name}-${var.cluster_datacenter}"
   final_parameter_group_name        = var.parameter_group_name == "" ? "${var.cluster_id}-${local.region_datacenter}" : var.parameter_group_name
   final_parameter_group_description = var.parameter_group_description == "" ? "Managed by Terraform" : "Managed by Terraform ${var.parameter_group_description}"
   account_id                        = data.aws_caller_identity.current.account_id
-
 }
+
 
 data "aws_caller_identity" "current" {
   provider = aws.location

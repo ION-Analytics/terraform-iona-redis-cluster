@@ -48,20 +48,14 @@ variable "subnets" {
     type        = list(string)
 }
 
-
-data "aws_ecs_clusters" "available" {}
+variable "subnet_group_name" {
+    description = "Required name of the subnet group."
+    type        = string
+}
 
 variable "cluster_datacenter" {
-  type = string
-
-  validation {
-    # Extract names from ARNs by splitting at the "/" and taking the last element
-    condition = contains([
-      for arn in data.aws_ecs_clusters.available.cluster_arns : element(split("/", arn), 1)
-    ], var.cluster_datacenter)
-
-    error_message = "The cluster name '${var.cluster_datacenter}' does not exist in this region."
-  }
+    description = "or1-test/or1-internal/oh1-demo/oh1-beta/oh1-prod/etc."
+    type        = string
 }
 
 variable "node_type" {
