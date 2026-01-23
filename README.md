@@ -55,7 +55,6 @@ No modules.
 | <a name="input_parameter_group_name"></a> [parameter\_group\_name](#input\_parameter\_group\_name) | Optional name for the parameter group. If omitted name will match cluster | `string` | `""` | no |
 | <a name="input_replicas_per_node_group"></a> [replicas\_per\_node\_group](#input\_replicas\_per\_node\_group) | Number of replica nodes in each node group. Changing this number will trigger a resizing operation before other settings modifications. Defaults to 0 | `number` | `0` | no |
 | <a name="input_security_group_ids"></a> [security\_group\_ids](#input\_security\_group\_ids) | A list of security group IDs as strings | `list(string)` | <pre>[<br/>  ""<br/>]</pre> | no |
-| <a name="input_subnet_group_name"></a> [subnet\_group\_name](#input\_subnet\_group\_name) | Required name of the subnet group. | `string` | n/a | yes |
 | <a name="input_subnets"></a> [subnets](#input\_subnets) | A list of subnets IDs as strings | `list(string)` | n/a | yes |
 
 ## Outputs
