@@ -48,9 +48,19 @@ variable "subnets" {
     type        = list(string)
 }
 
+
+data "aws_ecs_clusters" "available" {}
+
 variable "cluster_datacenter" {
     description = "or1-test/or1-internal/oh1-demo/oh1-beta/oh1-prod/etc."
     type        = string
+
+    validation {
+        # Check if the user's input exists in the list of discovered cluster names
+        condition     = contains(data.aws_ecs_clusters.available.cluster_names, var.cluster_datacenter)
+        error_message = "The cluster name '${var.cluster_datacenter}' does not exist. Available clusters are: ${join(", ", data.aws_ecs_clusters.available.cluster_names)}"
+    }
+
 }
 
 variable "node_type" {

@@ -7,13 +7,7 @@ terraform {
   }
 }
 
-data "aws_ecs_clusters" "all" {}
 
-# Output the list of available ECS clusters
-output "available_ecs_clusters" {
-  value = data.aws_ecs_clusters.all.cluster_arns
-  description = "List of ECS clusters available in the region"
-}
 
 locals {
   component                         = "internal"
@@ -22,18 +16,6 @@ locals {
   final_parameter_group_description = var.parameter_group_description == "" ? "Managed by Terraform" : "Managed by Terraform ${var.parameter_group_description}"
   account_id                        = data.aws_caller_identity.current.account_id
 
-
-  is_valid_datacenter = contains(["testing"], var.cluster_id)
-}
-
-
-
-resource "null_resource" "check_datacenter" {
-  count = local.is_valid_datacenter ? 0 : 1
-
-  provisioner "local-exec" {
-    command = "echo 'Error: Datacenter ${var.cluster_id} not found in ECS clusters!' && exit 1"
-  }
 }
 
 data "aws_caller_identity" "current" {
