@@ -9,11 +9,11 @@ terraform {
 
 
 locals {
-  component         = "internal"
-  region_datacenter = "${data.aws_region.current.name}-${var.cluster_datacenter}"
-  pgname            = var.parameter_group_name == "" ? "${var.cluster_id}-${local.region_datacenter}" : var.parameter_group_name
-  pgdescription     = var.parameter_group_description == "" ? "Managed by Terraform" : var.parameter_group_description
-  account_id        = data.aws_caller_identity.current.account_id
+  component                         = "internal"
+  region_datacenter                 = "${data.aws_region.current.name}-${var.cluster_datacenter}"
+  final_parameter_group_name        = var.parameter_group_name == "" ? "${var.cluster_id}-${local.region_datacenter}" : var.parameter_group_name
+  final_parameter_group_description = var.parameter_group_description == "" ? "Managed by Terraform" : "Managed by Terraform ${var.parameter_group_description}"
+  account_id                        = data.aws_caller_identity.current.account_id
 }
 
 
@@ -37,7 +37,7 @@ resource "aws_elasticache_replication_group" "cluster" {
   description                = var.description
   node_type                  = var.node_type
   port                       = var.cluster_port
-  parameter_group_name       = local.pgname
+  parameter_group_name       = local.final_parameter_group_name
   subnet_group_name          = aws_elasticache_subnet_group.subnet_group.name
   automatic_failover_enabled = true
 
@@ -123,8 +123,8 @@ resource "aws_elasticache_user_group" "runtime" {
 resource "aws_elasticache_parameter_group" "cluster_pg" {
   provider = aws.location
 
-  name        = local.pgname
-  description = local.pgdescription
+  name        = local.final_parameter_group_name
+  description = local.final_parameter_group_description
   family      = "redis7"
 
   dynamic "parameter" {
