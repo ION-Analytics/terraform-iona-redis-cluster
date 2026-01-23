@@ -48,11 +48,6 @@ variable "subnets" {
   type        = list(string)
 }
 
-variable "subnet_group_name" {
-  description = "Required name of the subnet group."
-  type        = string
-}
-
 variable "cluster_datacenter" {
   description = "or1-test/or1-internal/oh1-demo/oh1-beta/oh1-prod/etc."
   type        = string
