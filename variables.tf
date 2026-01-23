@@ -49,7 +49,7 @@ variable "subnets" {
 }
 
 variable "cluster_datacenter" {
-  description = "or1-test/or1-internal/oh1-demo/oh1-beta/oh1-prod/etc."
+  description = "ECS cluster/datacenters like or1-test, or1-internal, oh1-demo, oh1-beta, oh1-prod, etc."
   type        = string
 
   validation {
@@ -60,7 +60,7 @@ variable "cluster_datacenter" {
         "oh1-demo",
         "oh1-beta"
     ], var.cluster_datacenter)
-    error_message = "Valid values for var: cluster_datacenter are (or1-test, or1-internal, oh1-demo, oh1-beta)."
+    error_message = "Valid values for var: cluster_datacenter are (or1-test, or1-internal, oh1-demo, oh1-beta). If there is a missing cluster from the list please contact Platform."
   }
 
 }
