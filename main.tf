@@ -40,10 +40,10 @@ resource "aws_elasticache_replication_group" "cluster" {
         for_each = var.log_delivery_configuration
 
         content {
-        destination      = lookup(log_delivery_configuration.value, "destination", null)
-        destination_type = lookup(log_delivery_configuration.value, "destination_type", null)
-        log_format       = lookup(log_delivery_configuration.value, "log_format", null)
-        log_type         = lookup(log_delivery_configuration.value, "log_type", null)
+            destination      = lookup(log_delivery_configuration.value, "destination", null)
+            destination_type = lookup(log_delivery_configuration.value, "destination_type", null)
+            log_format       = lookup(log_delivery_configuration.value, "log_format", null)
+            log_type         = lookup(log_delivery_configuration.value, "log_type", null)
         }
     }
     transit_encryption_enabled = true
@@ -129,8 +129,13 @@ data "aws_iam_policy_document" "elasticache_log_delivery_policy" {
       "logs:CreateLogStream"
     ]
 
+    # resources = [
+    #   "arn:aws:logs:${data.aws_region.current.region}:${local.account_id}:log-group:${aws_cloudwatch_log_group.logs.name}:log-stream:*"
+    # ]
+
     resources = [
-      "arn:aws:logs:${data.aws_region.current.region}:${local.account_id}:log-group:${aws_cloudwatch_log_group.logs.name}:log-stream:*"
+        for lg in aws_cloudwatch_log_group.logs :
+            "arn:aws:logs:${data.aws_region.current.region}:${local.account_id}:log-group:${lg.name}:log-stream:*"
     ]
 
     principals {
