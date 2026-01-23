@@ -101,7 +101,7 @@ resource "aws_elasticache_parameter_group" "cluster_pg" {
 
 resource "aws_elasticache_subnet_group" "subnet_group" {
     provider = aws.location
-    name       = "${var.subnet_group_name}-${local.region_datacenter}"
+    name       = "${var.subnet_group_name}-${local.region_datacenter}-nstanley"
     subnet_ids = var.subnets
 }
 
