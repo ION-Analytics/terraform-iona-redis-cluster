@@ -149,10 +149,3 @@ variable "parameter" {
   ]
 }
 
-# cdflow Release/Build Details 
-
-variable "release" {
-  type        = map(string)
-  description = "Metadata about the release"
-  default     = {}
-}
