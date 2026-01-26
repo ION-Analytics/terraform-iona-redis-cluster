@@ -50,6 +50,10 @@ resource "aws_elasticache_replication_group" "cluster" {
   num_node_groups         = var.num_node_groups
   replicas_per_node_group = var.replicas_per_node_group
 
+  # This will cause changes to apply immediately which
+  # depending on the setting might cause disruptions.
+  apply_immediately = true
+
   # Logging configuration (dynamic block)
   dynamic "log_delivery_configuration" {
     for_each = var.log_delivery_configuration
