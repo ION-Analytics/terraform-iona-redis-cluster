@@ -42,9 +42,9 @@ resource "aws_elasticache_replication_group" "cluster" {
   automatic_failover_enabled = true
 
   # User group
-  user_group_ids = [
-    aws_elasticache_user_group.runtime.user_group_id
-  ]
+  # user_group_ids = [
+  #   aws_elasticache_user_group.runtime.user_group_id
+  # ]
 
   # Cluster replication & node configuration
   num_node_groups         = var.num_node_groups
