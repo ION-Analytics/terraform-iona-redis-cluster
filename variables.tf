@@ -15,10 +15,10 @@ variable "parameter_group_name" {
   default     = ""
 }
 
-variable "elasticache_default_user_id" {
-  description = "REQUIRED: ID of default elasticache user"
-  type        = string
-}
+# variable "elasticache_default_user_id" {
+#   description = "REQUIRED: ID of default elasticache user"
+#   type        = string
+# }
 
 variable "elasticache_runtime_user_id" {
   description = "REQUIRED: ID of runtime elasticache user"
@@ -92,7 +92,6 @@ variable "replicas_per_node_group" {
 variable "engine_version" {
   description = "Version number of the cache engine to be used for the cache clusters in this replication group. If the version is 7 or higher, the major and minor version should be set, e.g., 7.2 Defaults to 7.1"
   type        = string
-  default     = "7.1"
 }
 
 variable "cluster_mode" {
@@ -106,25 +105,6 @@ variable "log_delivery_configuration" {
   default     = []
   description = "The log_delivery_configuration block allows the streaming of Redis SLOWLOG or Redis Engine Log to CloudWatch Logs or Kinesis Data Firehose. Max of 2 blocks."
 }
-
-# sample value
-
-# locals {
-#     log_delivery_configuration = [
-#         {
-#             "destination": "/aws/elasticache/fb-runtime-${local.region_datacenter}-engine-log"
-#             "destination_type": "cloudwatch-logs"
-#             "log_format": "json"
-#             "log_type" : "engine-log"
-#         },
-#         {
-#             "destination": "/aws/elasticache/fb-runtime-${local.region_datacenter}-slow-log"
-#             "destination_type": "cloudwatch-logs"
-#             "log_format": "json"
-#             "log_type" : "slow-log"
-#         }
-#     ]
-# }
 
 variable "parameter" {
   description = "Redis Parameter group values. Defaults should be sane."

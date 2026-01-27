@@ -50,7 +50,7 @@ resource "aws_elasticache_replication_group" "cluster" {
   num_node_groups         = var.num_node_groups
   replicas_per_node_group = var.replicas_per_node_group
 
-  # This will cause changes to apply immediately which
+  # WARNING: This will cause changes to apply immediately which
   # depending on the setting might cause disruptions.
   apply_immediately = true
 
@@ -71,11 +71,12 @@ resource "aws_elasticache_replication_group" "cluster" {
   security_group_ids         = var.security_group_ids
 }
 
-
+# Ensure the AWS ElastiCache default user for Redis has no access
+# privileges and no password authentication.
 resource "aws_elasticache_user" "default" {
   provider = aws.location
 
-  user_id       = var.elasticache_default_user_id
+  user_id       = "${var.cluster_id}-${local.region_datacenter}-default-user"
   user_name     = "default"
   access_string = "off -@all"
   engine        = "redis"
@@ -113,17 +114,18 @@ resource "aws_elasticache_user" "runtime" {
 }
 
 
-resource "aws_elasticache_user_group" "runtime" {
-  provider      = aws.location
-  user_group_id = var.elasticache_user_group_id
-  engine        = "redis"
-  user_ids = [
-    aws_elasticache_user.default.user_id,
-    aws_elasticache_user.runtime.user_id
-  ]
-}
+# resource "aws_elasticache_user_group" "runtime" {
+#   provider      = aws.location
+#   user_group_id = var.elasticache_user_group_id
+#   engine        = "redis"
+#   user_ids = [
+#     aws_elasticache_user.default.user_id,
+#     aws_elasticache_user.runtime.user_id
+#   ]
+# }
 
-
+# NOTE: An AWS Redis ElastiCache cluster can only
+# be associated with one parameter group at a time
 resource "aws_elasticache_parameter_group" "cluster_pg" {
   provider = aws.location
 
@@ -139,6 +141,7 @@ resource "aws_elasticache_parameter_group" "cluster_pg" {
       value = tostring(parameter.value.value)
     }
   }
+
 }
 
 
@@ -147,6 +150,15 @@ resource "aws_elasticache_subnet_group" "subnet_group" {
   name       = "${var.cluster_id}-${local.region_datacenter}"
   subnet_ids = var.subnets
 }
+
+
+# -----------------------------------------------------------------------------
+# CloudWatch Log Group and Log Delivery Policy Setup for Elasticache
+#
+# - Configures CloudWatch log groups.
+# - Sets up log delivery policies, granting Elasticache permissions to log groups.
+# - Generates an IAM policy allowing log stream and event creation actions.
+# -----------------------------------------------------------------------------
 
 
 resource "aws_cloudwatch_log_group" "logs" {
