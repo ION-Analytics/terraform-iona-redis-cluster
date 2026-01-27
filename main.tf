@@ -70,13 +70,13 @@ resource "aws_elasticache_replication_group" "cluster" {
   transit_encryption_enabled = true
   security_group_ids         = var.security_group_ids
 }
-
+fb-repgrp-nstanley-us-west-2-or1-test-default-user
 # Ensure the AWS ElastiCache default user for Redis has no access
 # privileges and no password authentication.
 resource "aws_elasticache_user" "default" {
   provider = aws.location
 
-  user_id       = "${var.cluster_id}-${local.region_datacenter}-default-user"
+  user_id       = "${var.cluster_id}-default-user"
   user_name     = "default"
   access_string = "off -@all"
   engine        = "redis"
