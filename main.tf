@@ -101,7 +101,7 @@ resource "aws_elasticache_user" "runtime" {
   for_each = { for idx, user_config in var.user_configuration : user_config.user_id => user_config }
 
   user_id      = each.value.user_id
-  user_name    = ach.value.user_id
+  user_name    = each.value.user_id
 
   access_string = each.value.access_string
   engine        = "redis"
