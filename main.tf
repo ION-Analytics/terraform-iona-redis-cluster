@@ -98,25 +98,33 @@ resource "aws_elasticache_user" "default" {
 
 
 resource "aws_elasticache_user" "runtime" {
-  for_each = { for idx, user_config in var.user_configuration : user_config.user_id => user_config }
+  provider = aws.location
 
-  user_id      = each.value.user_id
-  user_name    = each.value.user_id
+  # Loop through user configuration
+  for_each = {
+    for idx, user_config in var.user_configuration : 
+      user_config.user_id => user_config
+  }
+
+  user_id   = each.value.user_id
+  user_name = each.value.user_id
 
   access_string = each.value.access_string
   engine        = "redis"
 
+  # Authentication mode setup
   authentication_mode {
     type = "iam"
   }
 
+  # Timeouts for create, update, and delete actions
   timeouts {
     create = "10m"
     update = "10m"
     delete = "10m"
   }
-  # Additional attributes like user authentication, engine version, etc., can be added as needed.
 }
+
 
 
 
