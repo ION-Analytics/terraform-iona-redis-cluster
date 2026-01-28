@@ -98,11 +98,12 @@ resource "aws_elasticache_user" "default" {
 
 
 resource "aws_elasticache_user" "runtime" {
-  provider = aws.location
+  for_each = { for idx, user_config in var.user_configuration : user_config.user_id => user_config }
 
-  user_id       = var.elasticache_runtime_user_id
-  user_name     = var.elasticache_runtime_user_id
-  access_string = "on ~* &* +@all"
+  user_id      = each.value.user_id
+  user_name    = ach.value.user_id
+
+  access_string = each.value.access_string
   engine        = "redis"
 
   authentication_mode {
@@ -114,7 +115,30 @@ resource "aws_elasticache_user" "runtime" {
     update = "10m"
     delete = "10m"
   }
+  # Additional attributes like user authentication, engine version, etc., can be added as needed.
 }
+
+
+
+
+# resource "aws_elasticache_user" "runtime" {
+#   provider = aws.location
+
+#   user_id       = var.elasticache_runtime_user_id
+#   user_name     = var.elasticache_runtime_user_id
+#   access_string = "on ~* &* +@all"
+#   engine        = "redis"
+
+#   authentication_mode {
+#     type = "iam"
+#   }
+
+#   timeouts {
+#     create = "10m"
+#     update = "10m"
+#     delete = "10m"
+#   }
+# }
 
 
 # resource "aws_elasticache_user_group" "runtime" {

@@ -25,10 +25,18 @@ variable "elasticache_runtime_user_id" {
   type        = string
 }
 
-variable "elasticache_user_group_id" {
-  description = "REQUIRED: ID of elasticache user group"
-  type        = string
+variable "user_configuration" {
+  description = "List of user configurations"
+  type = list(object({
+    user_id      = string
+    access_string = string
+  }))
 }
+
+# variable "elasticache_user_group_id" {
+#   description = "REQUIRED: ID of elasticache user group"
+#   type        = string
+# }
 
 
 variable "parameter_group_description" {
