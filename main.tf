@@ -159,6 +159,7 @@ resource "aws_elasticache_subnet_group" "subnet_group" {
 # CloudWatch Log Group and Log Delivery Policy Setup for Elasticache
 #
 # - Configures CloudWatch log groups.
+# - This is optional and should only be used in environments without Datadog configured.
 # - Sets up log delivery policies, granting Elasticache permissions to log groups.
 # - Generates an IAM policy allowing log stream and event creation actions.
 # -----------------------------------------------------------------------------
