@@ -20,10 +20,10 @@ variable "parameter_group_name" {
 #   type        = string
 # }
 
-variable "elasticache_runtime_user_id" {
-  description = "REQUIRED: ID of runtime elasticache user"
-  type        = string
-}
+# variable "elasticache_runtime_user_id" {
+#   description = "REQUIRED: ID of runtime elasticache user"
+#   type        = string
+# }
 
 variable "user_configuration" {
   description = "List of user configurations"
