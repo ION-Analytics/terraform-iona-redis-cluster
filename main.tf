@@ -41,8 +41,6 @@ resource "aws_elasticache_replication_group" "cluster" {
   subnet_group_name          = aws_elasticache_subnet_group.subnet_group.name
   automatic_failover_enabled = true
 
-  at_rest_encryption_enabled    = true
-  transit_encryption_enabled = true
 
 
   # User group
@@ -71,6 +69,7 @@ resource "aws_elasticache_replication_group" "cluster" {
   }
 
   # Security settings
+  at_rest_encryption_enabled = true
   transit_encryption_enabled = true
   security_group_ids         = var.security_group_ids
 }
