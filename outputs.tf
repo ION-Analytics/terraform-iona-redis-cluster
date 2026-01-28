@@ -13,15 +13,15 @@ output "replication_group_engine_version_actual" {
     value       = aws_elasticache_replication_group.cluster.engine_version_actual
 }
 
-output "runtime_user" {
-    description = "The user id for connecting to this replication group."
-    value       = aws_elasticache_user.runtime.id
-}
+# output "runtime_user" {
+#     description = "The user id for connecting to this replication group."
+#     value       = aws_elasticache_user.runtime.id
+# }
 
-output "runtime_user_auth_mode" {
-    description = "The authentication mode configured for runtime user."
-    value       = aws_elasticache_user.runtime.authentication_mode[0].type
-}
+# output "runtime_user_auth_mode" {
+#     description = "The authentication mode configured for runtime user."
+#     value       = aws_elasticache_user.runtime.authentication_mode[0].type
+# }
 
 output "parameter_group_name" {
     description = "The ElastiCache parameter group name"
