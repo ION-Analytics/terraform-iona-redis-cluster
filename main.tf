@@ -98,7 +98,7 @@ resource "aws_elasticache_user" "default" {
 
 
 resource "aws_elasticache_user" "runtime" {
-  provider = aws.location
+  # provider = aws.location
 
   # Loop through user configuration
   for_each = {
