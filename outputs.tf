@@ -27,3 +27,7 @@ output "parameter_group_name" {
     description = "The ElastiCache parameter group name"
     value       = aws_elasticache_parameter_group.cluster_pg.id
 }
+
+output "elasticache_replication_group_arn" {
+  value = aws_elasticache_replication_group.cluster.arn
+}
