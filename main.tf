@@ -138,7 +138,7 @@ resource "aws_iam_policy" "cluster_connect_ami_policy" {
           "elasticache:Connect"
         ]
         Effect   = "Allow"
-        Resource = aws_elasticache_replication_group.cluster.elasticache_replication_group_arn
+        Resource = aws_elasticache_replication_group.cluster.arn
       }
     ]
   })
