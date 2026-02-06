@@ -158,7 +158,7 @@ resource "aws_elasticache_user" "default" {
   engine        = "redis"
 
   authentication_mode {
-    type = "iam"
+    type = "no-password-required"
   }
 
   timeouts {
