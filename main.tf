@@ -47,7 +47,7 @@ resource "aws_elasticache_replication_group" "cluster" {
   cluster_mode               = var.cluster_mode
   node_type                  = var.node_type
   port                       = var.cluster_port
-  subnet_group_name          = aws_elasticache_subnet_group.subnet_group.name
+  subnet_group_name          = aws_elasticache_subnet_group.cluster_subnet_group.name
 
   num_node_groups         = var.num_node_groups
   replicas_per_node_group = var.replicas_per_node_group
