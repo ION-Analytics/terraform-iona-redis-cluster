@@ -20,16 +20,6 @@ variable "parameter_group_name" {
   default     = ""
 }
 
-# variable "elasticache_default_user_id" {
-#   description = "REQUIRED: ID of default elasticache user"
-#   type        = string
-# }
-
-# variable "elasticache_runtime_user_id" {
-#   description = "REQUIRED: ID of runtime elasticache user"
-#   type        = string
-# }
-
 variable "user_configuration" {
   description = "List of user configurations"
   type = list(object({
@@ -37,12 +27,6 @@ variable "user_configuration" {
     access_string = string
   }))
 }
-
-# variable "elasticache_user_group_id" {
-#   description = "REQUIRED: ID of elasticache user group"
-#   type        = string
-# }
-
 
 variable "parameter_group_description" {
   description = "Optional description for the parameter group. If omitted will use 'Managed by Terraform'"
