@@ -72,7 +72,6 @@ resource "aws_elasticache_replication_group" "cluster" {
   security_group_ids         = var.security_group_ids
 }
 
-
 # NOTE: An AWS Redis ElastiCache cluster can only be associated with one parameter group at a time. 
 # While a parameter group can be associated with multiple clusters, HOWEVER we enforce a 1-to-1  
 # relationship in Terraform to simplify environment segregation, promotion and management.
@@ -103,8 +102,18 @@ resource "aws_elasticache_subnet_group" "cluster_subnet_group" {
 }
 
 
+
 # ----------------------------------------------------------------------------------
-# AWS ElastiCache Cluster IAM access, Policies Configuration
+# AWS ElastiCache Cluster IAM Access and Policy Configuration
+# ----------------------------------------------------------------------------------
+# - Creates an IAM Role (`cluster_iam_role`) that grants resources access to the
+#   ElastiCache cluster.
+# - Defines an IAM Policy (`cluster_connect_ami_policy`) that allows connection to
+#     the ElastiCache cluster.
+# - Attaches the IAM Policy (`cluster_connect_ami_policy`) to the IAM Role
+#     (`cluster_iam_role`) for authorization.
+# - The IAM role and policy are scoped to the ElastiCache cluster via its ARN,
+#   and the policy allows specified principals to assume the role.
 # ----------------------------------------------------------------------------------
 
 resource "aws_iam_role" "cluster_iam_role" {
@@ -119,7 +128,6 @@ resource "aws_iam_role" "cluster_iam_role" {
         Effect = "Allow"
         Principal = {
           AWS = var.assume_connection_role_principals
-           # aws_iam_user.redis_user_fb_runtime_or1_test.arn # TODO how to manage this 
         }
       }
     ]
@@ -149,6 +157,7 @@ resource "aws_iam_role_policy_attachment" "attach_or1_test_fb_connect_policy_to_
   role       = aws_iam_role.cluster_iam_role.name
   policy_arn = aws_iam_policy.cluster_connect_ami_policy.arn
 }
+
 
 
 # ----------------------------------------------------------------------------------
@@ -207,6 +216,8 @@ resource "aws_elasticache_user" "default" {
 
 }
 
+
+
 # ----------------------------------------------------------------------------------
 # CloudWatch Log Group and Log Delivery Policy Setup for Elasticache
 #
@@ -216,7 +227,6 @@ resource "aws_elasticache_user" "default" {
 # - Generates an IAM policy allowing log stream and event creation actions.
 # ----------------------------------------------------------------------------------
 
-
 resource "aws_cloudwatch_log_group" "logs" {
   count             = length(var.log_delivery_configuration)
   provider          = aws.location
@@ -225,14 +235,12 @@ resource "aws_cloudwatch_log_group" "logs" {
   retention_in_days = 14
 }
 
-
 resource "aws_cloudwatch_log_resource_policy" "elasticache_log_delivery_policy" {
   count           = length(var.log_delivery_configuration)
   provider        = aws.location
   policy_document = data.aws_iam_policy_document.elasticache_log_delivery_policy.json
   policy_name     = lookup(var.log_delivery_configuration[count.index], "destination")
 }
-
 
 data "aws_iam_policy_document" "elasticache_log_delivery_policy" {
   statement {
