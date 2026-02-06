@@ -7,7 +7,6 @@ terraform {
   }
 }
 
-
 locals {
   parameter_group_name = "${data.aws_region.current.id}-${var.cluster_datacenter}"
   final_parameter_group_description = var.parameter_group_description == "" ? "Managed by Terraform" : "Managed by Terraform ${var.parameter_group_description}"
@@ -25,8 +24,22 @@ data "aws_region" "current" {
 }
 
 
+# ----------------------------------------------------------------------------------
+# AWS ElastiCache Cluster Setup, Parameter Group, and Subnet Configuration
+#
+# - Creates an ElastiCache replication group based on the configuration in `var`.
+# - Configures the replication group with settings like `engine_version`, `node_type`,
+#   and `automatic_failover_enabled`. 
+# - Configures dynamic log delivery settings based on `var.log_delivery_configuration`.
+# - Ensures the replication group has at-rest and transit encryption enabled for security.
+# - Creates a dedicated ElastiCache parameter group for the Redis engine, enforcing a 
+#   1-to-1 relationship between clusters and parameter groups to simplify management.
+# - Sets up an ElastiCache subnet group using provided subnet IDs, associating it with 
+#   the replication group.
+# ----------------------------------------------------------------------------------
+
 resource "aws_elasticache_replication_group" "cluster" {
-  provider = aws.location // This will be set the region that the cluster will be created in.
+  provider = aws.location
 
   # General settings
   replication_group_id       = "${var.cluster_datacenter}-${var.cluster_id}-repgrp"
@@ -38,13 +51,6 @@ resource "aws_elasticache_replication_group" "cluster" {
   parameter_group_name       = local.parameter_group_name
   subnet_group_name          = aws_elasticache_subnet_group.subnet_group.name
   automatic_failover_enabled = true
-
-
-
-  # User group
-  # user_group_ids = [
-  #   aws_elasticache_user_group.runtime.user_group_id
-  # ]
 
   # Cluster replication & node configuration
   num_node_groups         = var.num_node_groups
@@ -72,12 +78,9 @@ resource "aws_elasticache_replication_group" "cluster" {
 }
 
 
-# NOTE: An AWS Redis ElastiCache cluster can only
-# be associated with one parameter group at a time.
-# But a Param group can be assoicated with many cluster
-# however we are enfocing a 1-1 relationship since we 
-# are using Terrafrom to manage and we want way to promote
-# changes in envs.
+# NOTE: An AWS Redis ElastiCache cluster can only be associated with one parameter group at a time. 
+# While a parameter group can be associated with multiple clusters, HOWEVER we enforce a 1-to-1  
+# relationship in Terraform to simplify environment segregation, promotion and management.
 resource "aws_elasticache_parameter_group" "cluster_pg" {
   provider = aws.location
 
@@ -96,7 +99,8 @@ resource "aws_elasticache_parameter_group" "cluster_pg" {
 
 }
 
-
+# Creates an ElastiCache subnet-group using the provided subnet IDs,
+# with a name based on the cluster's ID.
 resource "aws_elasticache_subnet_group" "subnet_group" {
   provider   = aws.location
   name       = "${var.cluster_datacenter}-${var.cluster_id}"
@@ -114,39 +118,20 @@ resource "aws_elasticache_subnet_group" "subnet_group" {
 
 
 
-
-
-
-
-
-
-# Ensure the AWS ElastiCache default user for Redis has no access
-# privileges and no password authentication.
-resource "aws_elasticache_user" "default" {
-  provider = aws.location
-
-  user_id       = "${var.cluster_id}-default-user"
-  user_name     = "default"
-  access_string = "off -@all"
-  engine        = "redis"
-
-  authentication_mode {
-    type = "no-password-required"
-  }
-
-  timeouts {
-    create = "10m"
-    update = "10m"
-    delete = "10m"
-  }
-
-}
-
+# ----------------------------------------------------------------------------------
+# AWS ElastiCache User Configuration and Default User Access Setup
+#
+# - Creates AWS ElastiCache users based on configurations in `var.user_configuration`.
+# - Loops through the configuration to define user-specific settings.
+# - Ensures IAM authentication is enabled for each user.
+# - Sets up a default ElastiCache user for Redis with no access privileges and 
+#   disables password authentication.
+# - Ensures default user does not have access to any resources.
+# ----------------------------------------------------------------------------------
 
 resource "aws_elasticache_user" "runtime" {
   provider = aws.location
 
-  # Loop through user configuration
   for_each = {
     for idx, user_config in var.user_configuration :
     user_config.user_id => user_config
@@ -158,12 +143,10 @@ resource "aws_elasticache_user" "runtime" {
   access_string = each.value.access_string
   engine        = "redis"
 
-  # Authentication mode setup
   authentication_mode {
     type = "iam"
   }
 
-  # Timeouts for create, update, and delete actions
   timeouts {
     create = "10m"
     update = "10m"
@@ -171,19 +154,30 @@ resource "aws_elasticache_user" "runtime" {
   }
 }
 
+resource "aws_elasticache_user" "default" {
+  provider = aws.location
 
+  user_id       = "${var.cluster_datacenter}-${var.cluster_id}-default"
+  user_name     = "default"
+  access_string = "off -@all"
+  engine        = "redis"
 
+  timeouts {
+    create = "10m"
+    update = "10m"
+    delete = "10m"
+  }
 
+}
 
-
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
 # CloudWatch Log Group and Log Delivery Policy Setup for Elasticache
 #
 # - Configures CloudWatch log groups.
 # - This is optional and should only be used in environments without Datadog configured.
 # - Sets up log delivery policies, granting Elasticache permissions to log groups.
 # - Generates an IAM policy allowing log stream and event creation actions.
-# -----------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
 
 
 resource "aws_cloudwatch_log_group" "logs" {
