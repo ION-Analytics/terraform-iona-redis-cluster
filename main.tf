@@ -157,6 +157,10 @@ resource "aws_elasticache_user" "default" {
   access_string = "off -@all"
   engine        = "redis"
 
+  authentication_mode {
+    type = "iam"
+  }
+
   timeouts {
     create = "10m"
     update = "10m"
