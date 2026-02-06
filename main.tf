@@ -128,7 +128,7 @@ resource "aws_iam_role" "cluster_iam_role" {
 
 resource "aws_iam_policy" "cluster_connect_ami_policy" {
   provider    =  aws.location
-  name        = "${var.cluster_datacenter}-${var.cluster_id}-cluster-connect-policy"
+  name        = "${var.cluster_datacenter}-${var.cluster_id}-elasticcache-connect-policy"
   description = "Managed by Terraform: Allow access to ${var.cluster_datacenter}-${var.cluster_id} ElastiCache Cluster"
   policy = jsonencode({
     Version = "2012-10-17"
