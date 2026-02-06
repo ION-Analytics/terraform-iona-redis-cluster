@@ -11,7 +11,7 @@ variable "cluster_id" {
 variable "description" {
   description = "Cluster description"
   type        = string
-  default     = "Managed by Terraform"
+  default     = ""
 }
 
 variable "parameter_group_name" {

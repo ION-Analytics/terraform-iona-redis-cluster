@@ -8,21 +8,15 @@ terraform {
 }
 
 locals {
-  parameter_group_name              = "${var.cluster_datacenter}-${var.cluster_id}-paramgrp"
-  final_parameter_group_description = var.parameter_group_description == "" ? "Managed by Terraform" : "Managed by Terraform ${var.parameter_group_description}"
-  account_id                        = data.aws_caller_identity.current.account_id // needed for logging
+  parameter_group_name                = "${var.cluster_datacenter}-${var.cluster_id}-paramgrp"
+  final_replication_group_description = var.description == "" ? "Managed by Terraform" : "Managed by Terraform ${var.description}"
+  final_parameter_group_description   = var.parameter_group_description == "" ? "Managed by Terraform" : "Managed by Terraform ${var.parameter_group_description}"
+  account_id                          = data.aws_caller_identity.current.account_id // needed for logging
 }
-
 
 data "aws_caller_identity" "current" {
   provider = aws.location
 }
-
-
-data "aws_region" "current" {
-  provider = aws.location
-}
-
 
 # ----------------------------------------------------------------------------------
 # AWS ElastiCache Cluster Setup, Parameter Group, and Subnet Configuration
@@ -40,19 +34,19 @@ resource "aws_elasticache_replication_group" "cluster" {
   provider = aws.location
 
   replication_group_id = "${var.cluster_datacenter}-${var.cluster_id}-repgrp"
-  description          = var.description
+  description          = local.final_replication_group_description
   parameter_group_name = local.parameter_group_name
 
-  engine_version             = var.engine_version
-  cluster_mode               = var.cluster_mode
-  node_type                  = var.node_type
-  port                       = var.cluster_port
-  subnet_group_name          = aws_elasticache_subnet_group.cluster_subnet_group.name
+  engine_version    = var.engine_version
+  cluster_mode      = var.cluster_mode
+  node_type         = var.node_type
+  port              = var.cluster_port
+  subnet_group_name = aws_elasticache_subnet_group.cluster_subnet_group.name
 
   num_node_groups         = var.num_node_groups
   replicas_per_node_group = var.replicas_per_node_group
 
-  apply_immediately = true # WARN: Apply changes immediately, which may cause disruptions.
+  apply_immediately          = true # WARN: Apply changes immediately, which may cause disruptions.
   automatic_failover_enabled = true
 
   dynamic "log_delivery_configuration" {
@@ -109,16 +103,16 @@ resource "aws_elasticache_subnet_group" "cluster_subnet_group" {
 # - Creates an IAM Role (`cluster_iam_role`) that grants resources access to the
 #   ElastiCache cluster.
 # - Defines an IAM Policy (`cluster_connect_ami_policy`) that allows connection to
-#     the ElastiCache cluster.
+#   the ElastiCache cluster.
 # - Attaches the IAM Policy (`cluster_connect_ami_policy`) to the IAM Role
-#     (`cluster_iam_role`) for authorization.
+#   (`cluster_iam_role`) for authorization.
 # - The IAM role and policy are scoped to the ElastiCache cluster via its ARN,
 #   and the policy allows specified principals to assume the role.
 # ----------------------------------------------------------------------------------
 
 resource "aws_iam_role" "cluster_iam_role" {
-  provider = aws.location
-  name     = "${var.cluster_datacenter}-${var.cluster_id}-cluster-role"
+  provider    = aws.location
+  name        = "${var.cluster_datacenter}-${var.cluster_id}-cluster-role"
   description = "Managed by Terraform: Role to give resources access to the ${var.cluster_datacenter}-${var.cluster_id} ElastiCache Cluster"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -135,7 +129,7 @@ resource "aws_iam_role" "cluster_iam_role" {
 }
 
 resource "aws_iam_policy" "cluster_connect_ami_policy" {
-  provider    =  aws.location
+  provider    = aws.location
   name        = "${var.cluster_datacenter}-${var.cluster_id}-elasticcache-connect-policy"
   description = "Managed by Terraform: Allow access to ${var.cluster_datacenter}-${var.cluster_id} ElastiCache Cluster"
   policy = jsonencode({
@@ -226,6 +220,10 @@ resource "aws_elasticache_user" "default" {
 # - Sets up log delivery policies, granting Elasticache permissions to log groups.
 # - Generates an IAM policy allowing log stream and event creation actions.
 # ----------------------------------------------------------------------------------
+
+data "aws_region" "current" {
+  provider = aws.location
+}
 
 resource "aws_cloudwatch_log_group" "logs" {
   count             = length(var.log_delivery_configuration)
