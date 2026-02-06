@@ -8,9 +8,9 @@ terraform {
 }
 
 locals {
-  parameter_group_name = "${data.aws_region.current.id}-${var.cluster_datacenter}"
+  parameter_group_name              = "${data.aws_region.current.id}-${var.cluster_datacenter}"
   final_parameter_group_description = var.parameter_group_description == "" ? "Managed by Terraform" : "Managed by Terraform ${var.parameter_group_description}"
-  account_id = data.aws_caller_identity.current.account_id // needed for logging
+  account_id                        = data.aws_caller_identity.current.account_id // needed for logging
 }
 
 
@@ -28,8 +28,6 @@ data "aws_region" "current" {
 # AWS ElastiCache Cluster Setup, Parameter Group, and Subnet Configuration
 #
 # - Creates an ElastiCache replication group based on the configuration in `var`.
-# - Configures the replication group with settings like `engine_version`, `node_type`,
-#   and `automatic_failover_enabled`. 
 # - Configures dynamic log delivery settings based on `var.log_delivery_configuration`.
 # - Ensures the replication group has at-rest and transit encryption enabled for security.
 # - Creates a dedicated ElastiCache parameter group for the Redis engine, enforcing a 
@@ -41,25 +39,22 @@ data "aws_region" "current" {
 resource "aws_elasticache_replication_group" "cluster" {
   provider = aws.location
 
-  # General settings
-  replication_group_id       = "${var.cluster_datacenter}-${var.cluster_id}-repgrp"
+  replication_group_id = "${var.cluster_datacenter}-${var.cluster_id}-repgrp"
+  description          = var.description
+  parameter_group_name = local.parameter_group_name
+
   engine_version             = var.engine_version
   cluster_mode               = var.cluster_mode
-  description                = var.description
   node_type                  = var.node_type
   port                       = var.cluster_port
-  parameter_group_name       = local.parameter_group_name
   subnet_group_name          = aws_elasticache_subnet_group.subnet_group.name
-  automatic_failover_enabled = true
 
-  # Cluster replication & node configuration
   num_node_groups         = var.num_node_groups
   replicas_per_node_group = var.replicas_per_node_group
 
-  # WARNING: This will apply changes immediately, which may cause disruptions depending on the setting.
-  apply_immediately = true
+  apply_immediately = true # WARN: Apply changes immediately, which may cause disruptions.
+  automatic_failover_enabled = true
 
-  # Logging configuration (dynamic block)
   dynamic "log_delivery_configuration" {
     for_each = var.log_delivery_configuration
 
