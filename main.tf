@@ -9,11 +9,9 @@ terraform {
 
 
 locals {
-  component                         = "internal"
-  region_datacenter                 = "${data.aws_region.current.id}-${var.cluster_datacenter}"
-  final_parameter_group_name        = var.parameter_group_name == "" ? "${var.cluster_id}-${local.region_datacenter}" : var.parameter_group_name
+  parameter_group_name = "${data.aws_region.current.id}-${var.cluster_datacenter}"
   final_parameter_group_description = var.parameter_group_description == "" ? "Managed by Terraform" : "Managed by Terraform ${var.parameter_group_description}"
-  account_id                        = data.aws_caller_identity.current.account_id
+  account_id = data.aws_caller_identity.current.account_id // needed for logging
 }
 
 
@@ -28,16 +26,16 @@ data "aws_region" "current" {
 
 
 resource "aws_elasticache_replication_group" "cluster" {
-  provider = aws.location
+  provider = aws.location // This will be set the region that the cluster will be created in.
 
   # General settings
-  replication_group_id       = "${var.cluster_id}-${local.region_datacenter}"
+  replication_group_id       = "${var.cluster_datacenter}-${var.cluster_id}-repgrp"
   engine_version             = var.engine_version
   cluster_mode               = var.cluster_mode
   description                = var.description
   node_type                  = var.node_type
   port                       = var.cluster_port
-  parameter_group_name       = local.final_parameter_group_name
+  parameter_group_name       = local.parameter_group_name
   subnet_group_name          = aws_elasticache_subnet_group.subnet_group.name
   automatic_failover_enabled = true
 
@@ -52,8 +50,7 @@ resource "aws_elasticache_replication_group" "cluster" {
   num_node_groups         = var.num_node_groups
   replicas_per_node_group = var.replicas_per_node_group
 
-  # WARNING: This will cause changes to apply immediately which
-  # depending on the setting might cause disruptions.
+  # WARNING: This will apply changes immediately, which may cause disruptions depending on the setting.
   apply_immediately = true
 
   # Logging configuration (dynamic block)
@@ -73,6 +70,55 @@ resource "aws_elasticache_replication_group" "cluster" {
   transit_encryption_enabled = true
   security_group_ids         = var.security_group_ids
 }
+
+
+# NOTE: An AWS Redis ElastiCache cluster can only
+# be associated with one parameter group at a time.
+# But a Param group can be assoicated with many cluster
+# however we are enfocing a 1-1 relationship since we 
+# are using Terrafrom to manage and we want way to promote
+# changes in envs.
+resource "aws_elasticache_parameter_group" "cluster_pg" {
+  provider = aws.location
+
+  name        = local.parameter_group_name
+  description = local.final_parameter_group_description
+  family      = "redis7"
+
+  dynamic "parameter" {
+    for_each = var.parameter
+
+    content {
+      name  = parameter.value.name
+      value = tostring(parameter.value.value)
+    }
+  }
+
+}
+
+
+resource "aws_elasticache_subnet_group" "subnet_group" {
+  provider   = aws.location
+  name       = "${var.cluster_datacenter}-${var.cluster_id}"
+  subnet_ids = var.subnets
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Ensure the AWS ElastiCache default user for Redis has no access
 # privileges and no password authentication.
@@ -102,8 +148,8 @@ resource "aws_elasticache_user" "runtime" {
 
   # Loop through user configuration
   for_each = {
-    for idx, user_config in var.user_configuration : 
-      user_config.user_id => user_config
+    for idx, user_config in var.user_configuration :
+    user_config.user_id => user_config
   }
 
   user_id   = each.value.user_id
@@ -128,63 +174,6 @@ resource "aws_elasticache_user" "runtime" {
 
 
 
-
-# resource "aws_elasticache_user" "runtime" {
-#   provider = aws.location
-
-#   user_id       = var.elasticache_runtime_user_id
-#   user_name     = var.elasticache_runtime_user_id
-#   access_string = "on ~* &* +@all"
-#   engine        = "redis"
-
-#   authentication_mode {
-#     type = "iam"
-#   }
-
-#   timeouts {
-#     create = "10m"
-#     update = "10m"
-#     delete = "10m"
-#   }
-# }
-
-
-# resource "aws_elasticache_user_group" "runtime" {
-#   provider      = aws.location
-#   user_group_id = var.elasticache_user_group_id
-#   engine        = "redis"
-#   user_ids = [
-#     aws_elasticache_user.default.user_id,
-#     aws_elasticache_user.runtime.user_id
-#   ]
-# }
-
-# NOTE: An AWS Redis ElastiCache cluster can only
-# be associated with one parameter group at a time
-resource "aws_elasticache_parameter_group" "cluster_pg" {
-  provider = aws.location
-
-  name        = local.final_parameter_group_name
-  description = local.final_parameter_group_description
-  family      = "redis7"
-
-  dynamic "parameter" {
-    for_each = var.parameter
-
-    content {
-      name  = parameter.value.name
-      value = tostring(parameter.value.value)
-    }
-  }
-
-}
-
-
-resource "aws_elasticache_subnet_group" "subnet_group" {
-  provider   = aws.location
-  name       = "${var.cluster_id}-${local.region_datacenter}"
-  subnet_ids = var.subnets
-}
 
 
 # -----------------------------------------------------------------------------
