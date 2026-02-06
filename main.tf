@@ -8,7 +8,7 @@ terraform {
 }
 
 locals {
-  parameter_group_name              = "${data.aws_region.current.id}-${var.cluster_datacenter}"
+  parameter_group_name              = "${var.cluster_datacenter}-${var.cluster_id}-paramgrp"
   final_parameter_group_description = var.parameter_group_description == "" ? "Managed by Terraform" : "Managed by Terraform ${var.parameter_group_description}"
   account_id                        = data.aws_caller_identity.current.account_id // needed for logging
 }
@@ -96,21 +96,59 @@ resource "aws_elasticache_parameter_group" "cluster_pg" {
 
 # Creates an ElastiCache subnet-group using the provided subnet IDs,
 # with a name based on the cluster's ID.
-resource "aws_elasticache_subnet_group" "subnet_group" {
+resource "aws_elasticache_subnet_group" "cluster_subnet_group" {
   provider   = aws.location
   name       = "${var.cluster_datacenter}-${var.cluster_id}"
   subnet_ids = var.subnets
 }
 
 
+# ----------------------------------------------------------------------------------
+# AWS ElastiCache Cluster IAM access, Policies Configuration
+# ----------------------------------------------------------------------------------
 
+resource "aws_iam_role" "cluster_iam_role" {
+  provider = aws.location
+  name     = "${var.cluster_datacenter}-${var.cluster_id}-cluster-role"
+  description = "Managed by Terraform: Role to give resources access to the ${var.cluster_datacenter}-${var.cluster_id} ElastiCache Cluster"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          AWS = var.assume_connection_role_principals
+           # aws_iam_user.redis_user_fb_runtime_or1_test.arn # TODO how to manage this 
+        }
+      }
+    ]
+  })
+}
 
+resource "aws_iam_policy" "cluster_connect_ami_policy" {
+  provider    =  aws.location
+  name        = "${var.cluster_datacenter}-${var.cluster_id}-cluster-connect-policy"
+  description = "Managed by Terraform: Allow access to ${var.cluster_datacenter}-${var.cluster_id} ElastiCache Cluster"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "elasticache:Connect"
+        ]
+        Effect   = "Allow"
+        Resource = aws_elasticache_replication_group.cluster.elasticache_replication_group_arn
+      }
+    ]
+  })
+}
 
-
-
-
-
-
+resource "aws_iam_role_policy_attachment" "attach_or1_test_fb_connect_policy_to_role" {
+  provider   = aws.location
+  role       = aws_iam_role.cluster_iam_role.name
+  policy_arn = aws_iam_policy.cluster_connect_ami_policy.arn
+}
 
 
 # ----------------------------------------------------------------------------------

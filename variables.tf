@@ -1,3 +1,8 @@
+variable "assume_connection_role_principals" {
+  description = "List of IAM resources that can assume the IAM role the allows elasticache:Connect."
+  type        = list(string)
+}
+
 variable "cluster_id" {
   description = "Cluster-id group Identifier. Changing this rebuilds the cluster"
   type        = string
