@@ -85,6 +85,10 @@ resource "aws_elasticache_parameter_group" "cluster_pg" {
     }
   }
 
+  depends_on = [
+    aws_elasticache_replication_group.cluster
+  ]
+
 }
 
 # Creates an ElastiCache subnet-group using the provided subnet IDs,
