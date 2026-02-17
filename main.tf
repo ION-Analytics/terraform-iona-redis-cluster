@@ -65,10 +65,6 @@ resource "aws_elasticache_replication_group" "cluster" {
   transit_encryption_enabled = true
   security_group_ids         = var.security_group_ids
 
-  # depends_on = [
-  #   aws_elasticache_parameter_group.cluster_pg
-  # ]
-
 }
 
 # NOTE: An AWS Redis ElastiCache cluster can only be associated with one parameter group at a time. 
