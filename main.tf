@@ -35,7 +35,7 @@ resource "aws_elasticache_replication_group" "cluster" {
 
   replication_group_id = "${var.cluster_datacenter}-${var.cluster_id}-repgrp"
   description          = local.final_replication_group_description
-  parameter_group_name = local.parameter_group_name
+  parameter_group_name = aws_elasticache_parameter_group.cluster_pg.name
 
   engine_version    = var.engine_version
   cluster_mode      = var.cluster_mode
@@ -65,10 +65,9 @@ resource "aws_elasticache_replication_group" "cluster" {
   transit_encryption_enabled = true
   security_group_ids         = var.security_group_ids
 
-
-  depends_on = [
-    aws_elasticache_parameter_group.cluster_pg
-  ]
+  # depends_on = [
+  #   aws_elasticache_parameter_group.cluster_pg
+  # ]
 
 }
 
