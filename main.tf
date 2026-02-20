@@ -63,7 +63,7 @@ resource "aws_elasticache_replication_group" "cluster" {
   at_rest_encryption_enabled = true
   transit_encryption_enabled = true
   security_group_ids         = var.security_group_ids
-  user_group_ids             = aws_elasticache_user_group.cluster_user_group.user_group_id
+  user_group_ids             = [aws_elasticache_user_group.cluster_user_group.user_group_id]
 
 }
 
