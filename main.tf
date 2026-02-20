@@ -215,7 +215,7 @@ resource "aws_elasticache_user_group" "cluster_user_group" {
   engine        = "redis"
   user_group_id = "${var.cluster_datacenter}-${var.cluster_id}-usergrp"
   user_ids      = [
-    aws_elasticache_user.runtime.user_id,
+    aws_elasticache_user.runtime[each.key].user_id,
     aws_elasticache_user.default.user_id
   ]
 }
