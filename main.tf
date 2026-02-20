@@ -164,6 +164,7 @@ resource "aws_iam_role_policy_attachment" "attach_or1_test_fb_connect_policy_to_
 # - Sets up a default ElastiCache user for Redis with no access privileges and 
 #   disables password authentication.
 # - Ensures default user does not have access to any resources.
+# - Add all users to to cluster elasticache user group.
 # ----------------------------------------------------------------------------------
 
 resource "aws_elasticache_user" "runtime" {
