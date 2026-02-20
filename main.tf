@@ -197,7 +197,7 @@ resource "aws_elasticache_user" "default" {
 
   user_id       = "${var.cluster_datacenter}-${var.cluster_id}-default"
   user_name     = "default"
-  access_string = "off -@all"
+  access_string = "off -@all" # no access to default user.
   engine        = "redis"
 
   authentication_mode {
