@@ -215,11 +215,10 @@ resource "aws_elasticache_user_group" "cluster_user_group" {
   provider = aws.location
   engine        = "redis"
   user_group_id = "${var.cluster_datacenter}-${var.cluster_id}-usergrp"
-  user_ids = [aws_elasticache_user.default.user_id]
-  # user_ids = concat(
-  #   [aws_elasticache_user.default.user_id],
-  #   # [for user in aws_elasticache_user.runtime : user.user_id]
-  # )
+  user_ids = concat(
+    [aws_elasticache_user.default.user_id],
+    [for user in aws_elasticache_user.runtime : user.user_id]
+  )
 }
 
 
