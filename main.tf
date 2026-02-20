@@ -8,7 +8,6 @@ terraform {
 }
 
 locals {
-  parameter_group_name                = "${var.cluster_datacenter}-${var.cluster_id}-paramgrp"
   final_replication_group_description = var.description == "" ? "Managed by Terraform" : "Managed by Terraform ${var.description}"
   final_parameter_group_description   = var.parameter_group_description == "" ? "Managed by Terraform" : "Managed by Terraform ${var.parameter_group_description}"
   account_id                          = data.aws_caller_identity.current.account_id // needed for logging
@@ -20,7 +19,7 @@ data "aws_caller_identity" "current" {
 
 # ----------------------------------------------------------------------------------
 # AWS ElastiCache Cluster Setup, Parameter Group, and Subnet Configuration
-#
+# ----------------------------------------------------------------------------------
 # - Creates an ElastiCache replication group based on the configuration in `var`.
 # - Configures dynamic log delivery settings based on `var.log_delivery_configuration`.
 # - Ensures the replication group has at-rest and transit encryption enabled for security.
@@ -64,6 +63,7 @@ resource "aws_elasticache_replication_group" "cluster" {
   at_rest_encryption_enabled = true
   transit_encryption_enabled = true
   security_group_ids         = var.security_group_ids
+  user_group_ids             = aws_elasticache_user_group.cluster_user_group.user_group_id
 
 }
 
@@ -73,7 +73,7 @@ resource "aws_elasticache_replication_group" "cluster" {
 resource "aws_elasticache_parameter_group" "cluster_pg" {
   provider = aws.location
 
-  name        = local.parameter_group_name
+  name        = "${var.cluster_datacenter}-${var.cluster_id}-paramgrp"
   description = local.final_parameter_group_description
   family      = "redis7"
 
@@ -157,7 +157,7 @@ resource "aws_iam_role_policy_attachment" "attach_or1_test_fb_connect_policy_to_
 
 # ----------------------------------------------------------------------------------
 # AWS ElastiCache User Configuration and Default User Access Setup
-#
+# ----------------------------------------------------------------------------------
 # - Creates AWS ElastiCache users based on configurations in `var.user_configuration`.
 # - Loops through the configuration to define user-specific settings.
 # - Ensures IAM authentication is enabled for each user.
@@ -211,11 +211,19 @@ resource "aws_elasticache_user" "default" {
 
 }
 
+resource "aws_elasticache_user_group" "cluster_user_group" {
+  engine        = "redis"
+  user_group_id = "${var.cluster_datacenter}-${var.cluster_id}-usergrp"
+  user_ids      = [
+    aws_elasticache_user.runtime.user_id,
+    aws_elasticache_user.default.user_id
+  ]
+}
 
 
 # ----------------------------------------------------------------------------------
 # CloudWatch Log Group and Log Delivery Policy Setup for Elasticache
-#
+# ----------------------------------------------------------------------------------
 # - Configures CloudWatch log groups.
 # - This is optional and should only be used in environments without Datadog configured.
 # - Sets up log delivery policies, granting Elasticache permissions to log groups.
